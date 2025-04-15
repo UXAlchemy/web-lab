@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trypophobia Trigger</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Nosifer&display=swap');
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #000;
+      width: 200vw;
+      height: 200vh;
+      overflow: hidden;
+      cursor: none;
+      position: relative;
+    }
+
+    .hole {
+      position: absolute;
+      border: 2px solid #000;
+      border-radius: 50%;
+      opacity: 0.9;
+      pointer-events: none;
+      mix-blend-mode: screen;
+    }
+
+    .outer-circle {
+      position: absolute;
+      background: radial-gradient(circle, #fff, #aaa);
+      border: 2px solid #000;
+      border-radius: 50%;
+    }
+
+    .inner-dot {
+      position: absolute;
+      background: #000;
+      border-radius: 50%;
+    }
+
+    .warning {
+      position: fixed;
+      top: 40%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: white;
+      font-size: 1.8rem;
+      font-family: 'Nosifer', cursive;
+      opacity: 0;
+      animation: fadeInOut 4s ease-in-out forwards;
+      pointer-events: none;
+      z-index: 9999;
+      text-align: center;
+    }
+
+    @keyframes fadeInOut {
+      0% { opacity: 0; }
+      10% { opacity: 1; }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="warning">Please be advised that this is created to trigger tryphobia</div>
+
+  <script>
+    document.addEventListener('mousemove', (e) => {
+      for (let i = 0; i < 10; i++) {
+        const size = (Math.random() * 20 + 10) * 1.5;
+        const angle = Math.random() * 2 * Math.PI;
+        const radius = Math.random() * 100; // max radius for circular spread
+        const offsetX = Math.cos(angle) * radius;
+        const offsetY = Math.sin(angle) * radius;
+
+        const outer = document.createElement('div');
+        outer.classList.add('outer-circle');
+        outer.style.width = `${size}px`;
+        outer.style.height = `${size}px`;
+        outer.style.left = `${e.clientX + offsetX}px`;
+        outer.style.top = `${e.clientY + offsetY}px`;
+
+        const inner = document.createElement('div');
+        inner.classList.add('inner-dot');
+        const dotSize = size * 0.25;
+        inner.style.width = `${dotSize}px`;
+        inner.style.height = `${dotSize}px`;
+        inner.style.left = `${(size - dotSize) / 2}px`;
+        inner.style.top = `${(size - dotSize) / 2}px`;
+
+        outer.appendChild(inner);
+        document.body.appendChild(outer);
+
+        setTimeout(() => {
+          outer.remove();
+        }, 1500);
+      }
+    });
+  </script>
+</body>
+</html>
