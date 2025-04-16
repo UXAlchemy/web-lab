@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Snake Vision</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: #072e13;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      position: relative;
+      cursor: none;
+    }
+
+    .container {
+      background-color: #6e8b65;
+      padding: 40px 60px;
+      border-radius: 60px;
+      text-align: center;
+      color: #000000;
+      max-width: 90%;
+      z-index: 2;
+      position: relative;
+    }
+
+    .title {
+      font-size: 2rem;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      font-size: 1rem;
+    }
+
+    .snake-segment {
+      background-color: #d1fae5;
+      position: absolute;
+      border-radius: 2px;
+    }
+
+    .ball {
+      width: 8px;
+      height: 8px;
+      background-color: white;
+      border-radius: 50%;
+      position: absolute;
+    }
+
+    #game-area {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+
+    .center-box {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+    }
+
+    #scoreboard {
+      position: absolute;
+      top: 10px;
+      left: 20px;
+      color: white;
+      font-size: 1.2rem;
+      z-index: 5;
+      font-weight: bold;
+    }
+
+    #speed-display {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      font-size: 1rem;
+      text-align: center;
+      z-index: 10;
+    }
+
+    #top-speed {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-area"></div>
+  <div id="scoreboard">Score: 0</div>
+
+  <div class="center-box">
+    <div class="container">
+      <div class="title">JUST A WEBSITE.</div>
+      <div class="subtitle">Maybe not. You have seen it for yourself now.</div>
+    </div>
+  </div>
+
+  <div id="speed-display">
+    <div id="live-speed">Speed: 0 m/s</div>
+    <div id="top-speed">Top Speed: 0 m/s</div>
+  </div>
+
+  <script>
+    const gameArea = document.getElementById('game-area');
+    const scoreboard = document.getElementById('scoreboard');
+    const liveSpeed = document.getElementById('live-speed');
+    const topSpeed = document.getElementById('top-speed');
+
+    const snake = [];
+    const ballCount = 30;
+    let score = 0;
+    let growthFactor = 0;
+    let mouseX = window.innerWidth / 2;
+    let mouseY = window.innerHeight / 2;
+    let lastMouseX = mouseX;
+    let lastMouseY = mouseY;
+    let lastTime = performance.now();
+    let currentSpeed = 0;
+    let maxSpeed = 0;
+
+    function updateSpeed(e) {
+      const now = performance.now();
+      const dt = (now - lastTime) / 1000;
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const speedPxPerSec = distance / dt;
+      const speedMps = speedPxPerSec * 0.0002646;
+
+      currentSpeed = speedMps.toFixed(3);
+      if (speedMps > maxSpeed) {
+        maxSpeed = speedMps;
+        topSpeed.textContent = `Top Speed: ${maxSpeed.toFixed(3)} m/s`;
+      }
+
+      liveSpeed.textContent = `Speed: ${currentSpeed} m/s`;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      lastTime = now;
+    }
+
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      updateSpeed(e);
+    });
+
+    function createSegment(x, y, size = 10) {
+      const segment = document.createElement('div');
+      segment.classList.add('snake-segment');
+      segment.style.width = size + 'px';
+      segment.style.height = size + 'px';
+      segment.style.left = x + 'px';
+      segment.style.top = y + 'px';
+      gameArea.appendChild(segment);
+      return segment;
+    }
+
+    function createBall() {
+      const ball = document.createElement('div');
+      ball.classList.add('ball');
+      ball.style.left = Math.random() * (window.innerWidth - 20) + 'px';
+      ball.style.top = Math.random() * (window.innerHeight - 20) + 'px';
+      gameArea.appendChild(ball);
+      return ball;
+    }
+
+    const balls = [];
+    for (let i = 0; i < ballCount; i++) {
+      balls.push(createBall());
+    }
+
+    for (let i = 0; i < 10; i++) {
+      const seg = createSegment(mouseX, mouseY);
+      snake.push({ element: seg, x: mouseX, y: mouseY, size: 10 });
+    }
+
+    function updateScore() {
+      scoreboard.textContent = `Score: ${score}`;
+    }
+
+    function animate() {
+      const speed = 0.2;
+      const head = snake[0];
+
+      const dx = mouseX - head.x;
+      const dy = mouseY - head.y;
+      head.x += dx * speed;
+      head.y += dy * speed;
+      head.element.style.left = head.x + 'px';
+      head.element.style.top = head.y + 'px';
+
+      for (let i = 1; i < snake.length; i++) {
+        const prev = snake[i - 1];
+        const seg = snake[i];
+        const segDx = prev.x - seg.x;
+        const segDy = prev.y - seg.y;
+        seg.x += segDx * 0.3;
+        seg.y += segDy * 0.3;
+        seg.element.style.left = seg.x + 'px';
+        seg.element.style.top = seg.y + 'px';
+      }
+
+      // Check for ball collisions
+      balls.forEach((ball, index) => {
+        if (!ball) return;
+        const rect = ball.getBoundingClientRect();
+        const distX = head.x - rect.left;
+        const distY = head.y - rect.top;
+        const distance = Math.sqrt(distX * distX + distY * distY);
+        if (distance < 12) {
+          gameArea.removeChild(ball);
+          balls[index] = null;
+
+          // Update score
+          score++;
+          updateScore();
+
+          // Grow snake
+          growthFactor += 0.5;
+          const last = snake[snake.length - 1];
+          const newSize = 10 + growthFactor;
+          const newSeg = createSegment(last.x, last.y, newSize);
+          snake.push({ element: newSeg, x: last.x, y: last.y, size: newSize });
+
+          // Respawn ball after 0.3s
+          setTimeout(() => {
+            balls[index] = createBall();
+          }, 300);
+        }
+      });
+
+      requestAnimationFrame(animate);
+    }
+
+    updateScore();
+    animate();
+  </script>
+</body>
+</html>
